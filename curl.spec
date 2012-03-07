@@ -1,7 +1,7 @@
 Summary: A utility for getting files from remote servers (FTP, HTTP, and others)
 Name: curl
 Version: 7.19.7
-Release: 16%{?dist}
+Release: 26%{?dist}
 License: MIT
 Group: Applications/Internet
 Source: http://curl.haxx.se/download/%{name}-%{version}.tar.lzma
@@ -25,6 +25,16 @@ Patch103: curl-7.19.4-debug.patch
 Patch104: curl-7.19.7-s390-sleep.patch
 Patch105: curl-7.19.7-localhost6.patch
 Patch201: curl-7.19.7-bz563220.patch
+Patch202: curl-7.19.7-bz623663.patch
+Patch203: curl-7.19.7-bz655134.patch
+Patch204: curl-7.19.7-bz625685.patch
+Patch205: curl-7.19.7-bz651592.patch
+Patch206: curl-7.19.7-bz669702.patch
+Patch207: curl-7.19.7-bz670802.patch
+Patch208: curl-7.19.7-bz678594.patch
+Patch209: curl-7.19.7-bz678580.patch
+Patch210: curl-7.19.7-bz684892.patch
+Patch211: curl-7.19.7-bz694294.patch
 Provides: webclient
 URL: http://curl.haxx.se/
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
@@ -128,9 +138,49 @@ use cURL's capabilities internally.
 # bz #589132
 %patch12 -p1
 
-# bz #606819 (we run automake because of the added lib/md4.c)
+# bz #606819
 %patch13 -p1
+
+# bz #623663
+%patch202 -p1
+
+# bz #655134
+%patch203 -p1
+
+# bz #625685
+%patch204 -p1
+
+# bz #651592
+%patch205 -p1
+
+# bz #669702
+%patch206 -p1
+
+# bz #670802
+%patch207 -p1
+
+# bz #678594
+%patch208 -p1
+
+# bz #678580
+%patch209 -p1
+
+# bz #684892
+%patch210 -p1
+
+# bz #694294
+%patch211 -p1
+
+# run aclocal since we are going to run automake
 aclocal -I m4
+
+# libnih.m4 is badly broken (#669059), we need to work around it (#669048)
+sed -e 's|^m4_rename(\[AC_COPYRIGHT\], \[_NIH_AC_COPYRIGHT\])$||' \
+    -e 's|^AC_DEFUN(\[AC_COPYRIGHT\],$|AC_DEFUN([NIH_COPYRIGHT],|' \
+    -e 's|^\[_NIH_AC_COPYRIGHT(\[\$1\])$|[AC_COPYRIGHT([$1])|' \
+    -i aclocal.m4
+
+# run automake because of added lib/md4.c (#606819)
 automake
 
 # required by curl-7.19.4-debug.patch and curl-7.21.0-ntlm.patch
@@ -224,6 +274,40 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/aclocal/libcurl.m4
 
 %changelog
+* Thu Apr 07 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-26
+- force NSS to ask for a new client certificate when connecting second time
+  to the same host (#694294)
+
+* Wed Apr 06 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-25
+- fix SIGSEGV in CERT_VerifyCert (#690273)
+
+* Thu Mar 17 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-24
+- make GSS authentication work when a curl handle is reused (#684892)
+
+* Wed Mar 16 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-23
+- do not ignore value of CURLOPT_SSL_VERIFYPEER in certain cases (#678580)
+
+* Tue Feb 22 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-22
+- do not ignore failure of SSL handshake (#669702)
+
+* Fri Feb 18 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-21
+- avoid memory leaks on SSL connection failure (#678594)
+
+* Wed Jan 19 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-20
+- avoid memory leaks and failure of NSS shutdown (#670802)
+
+* Tue Jan 18 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-19
+- fix handling of CURLOPT_CAPATH in libcurl (#669702)
+
+* Thu Jan 13 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-18
+- avoid build failure caused by a bug in libnih-devel (#669048)
+
+* Mon Jan 10 2011 Kamil Dudka <kdudka@redhat.com> 7.19.7-17
+- avoid CURLE_OUT_OF_MEMORY given a file name without any slash (#623663)
+- proxy tunnel support for LDAP requests (#655134)
+- proxy with kerberos authentication for https (#625685)
+- improve handling of FTP server session timeout (#651592)
+
 * Wed Jun 30 2010 Kamil Dudka <kdudka@redhat.com> 7.19.7-16
 - add support for NTLM authentication (#606819)
 
